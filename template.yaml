@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: URL Shortner v2 with JWT auth
+
+Resources:
+  UrlShortnerDb2:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UrlShortnerTable2
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: shortId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: shortId
+          KeyType: HASH
+
+  UrlShortnerApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      EndpointConfiguration: REGIONAL # Set to REGIONAL instead of EDGE
+      Name: UrlShortnerApi
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: JwtAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          JwtAuthorizer:
+            FunctionArn: !GetAtt JwtAuthorizerFunction.Arn
+            Identity:
+              Header: Authorization
+              ReauthorizeEvery: 300
+
+  UuididLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: UuididLayer
+      Description: Layer for uuid dependency
+      ContentUri: layers/pkg/
+      CompatibleRuntimes:
+        - nodejs22.x
+  
+  JsonWebTokenLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: JsonWebTokenLayer
+      Description: Layer for jsonwebtoken dependency
+      ContentUri: layers/pkg/
+      CompatibleRuntimes:
+        - nodejs22.x
+
+  UrlShortnerGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/module/lambdas/getShortUrl/app.lambdaHandler
+      Runtime: nodejs22.x
+      Architectures: #why
+        - x86_64
+      Layers:
+        - !Ref UuididLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UrlShortnerDb2
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref UrlShortnerDb2
+      Events:
+        RedirectUrl:
+          Type: Api
+          Properties:
+            Path: /short/{shortId}
+            Method: get
+            RestApiId: !Ref UrlShortnerApi
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/module/lambdas/getShortUrl/app.ts
+        External:
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
+          - "uuid"
+  
+  UrlShortnerPostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/module/lambdas/postShortUrl/app.lambdaHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref UuididLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UrlShortnerDb2
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref UrlShortnerDb2
+      Events:
+        ShortUrl:
+          Type: Api
+          Properties:
+            Path: /get-url-shortner
+            Method: post
+            RestApiId: !Ref UrlShortnerApi
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/module/lambdas/postShortUrl/app.ts
+        External:
+          - "@aws-sdk/client-dynamodb"
+          - "@aws-sdk/lib-dynamodb"
+          - "uuid"
+
+  JwtAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/module/lambdas/authorizer/app.lambdaHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref JsonWebTokenLayer
+      Environment:
+        Variables:
+          JWT_SECRET: "Amandeep"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/module/lambdas/authorizer/app.ts
+        External:
+          - jsonwebtoken
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${UrlShortnerApi}.execute-api.${AWS::Region}.amazonaws.com/dev/"
