@@ -10,11 +10,10 @@
     "unit": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
     "compile": "tsc",
-    "test": "npm run compile && npm run unit"
+    "build": "esbuild src/module/lambda/app.ts --bundle --platform=node --target=es2020 --outdir=dist --minify && sam build",
+    "test": "jest"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.50.0",
-    "aws-lambda": "^1.0.7",
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
@@ -31,6 +30,7 @@
     "jest": "^29.2.1",
     "prettier": "^2.5.1",
     "ts-jest": "^29.0.5",
+    "aws-lambda": "^1.0.7",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
   }

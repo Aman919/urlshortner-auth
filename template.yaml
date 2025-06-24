@@ -56,8 +56,8 @@ Resources:
   UrlShortnerGetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
-      Handler: src/module/lambdas/getShortUrl/app.lambdaHandler
+      CodeUri: dist/getShortUrl.js
+      Handler: lambdaHandler
       Runtime: nodejs22.x
       Architectures: #why
         - x86_64
@@ -92,8 +92,8 @@ Resources:
   UrlShortnerPostFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
-      Handler: src/module/lambdas/postShortUrl/app.lambdaHandler
+      CodeUri: dist/postShortUrl.js
+      Handler: lambdaHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64
@@ -128,8 +128,8 @@ Resources:
   JwtAuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: .
-      Handler: src/module/lambdas/authorizer/app.lambdaHandler
+      CodeUri: dist/authorizer.js
+      Handler: lambdaHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64
