@@ -19,7 +19,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: dev
-      EndpointConfiguration: REGIONAL # Set to REGIONAL instead of EDGE
+      EndpointConfiguration: REGIONAL
       Name: UrlShortnerApi
       Cors:
         AllowMethods: "'GET,POST,OPTIONS'"
@@ -56,8 +56,8 @@ Resources:
   UrlShortnerGetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/getShortUrl.js
-      Handler: lambdaHandler
+      CodeUri: .
+      Handler: dist/getShortUrl.app.lambdaHandler
       Runtime: nodejs22.x
       Architectures: #why
         - x86_64
@@ -92,8 +92,8 @@ Resources:
   UrlShortnerPostFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/postShortUrl.js
-      Handler: lambdaHandler
+      CodeUri: .
+      Handler: dist/postShortUrl.app.lambdaHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64
@@ -128,8 +128,8 @@ Resources:
   JwtAuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/authorizer.js
-      Handler: lambdaHandler
+      CodeUri: .
+      Handler: dist/authorizer.app.lambdaHandler
       Runtime: nodejs22.x
       Architectures:
         - x86_64

@@ -10,7 +10,7 @@
     "unit": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
     "compile": "tsc",
-    "build": "esbuild src/module/lambda/app.ts --bundle --platform=node --target=es2020 --outdir=dist --minify && sam build",
+    "build": "esbuild src/module/lambdas/authorizer/app.ts src/module/lambdas/getShortUrl/app.ts src/module/lambdas/postShortUrl/app.ts --bundle --platform=node --target=es2020 --outdir=dist --minify --external:@aws-sdk/client-dynamodb --external:@aws-sdk/lib-dynamodb && sam build",
     "test": "jest"
   },
   "dependencies": {
